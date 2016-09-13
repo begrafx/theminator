@@ -1,0 +1,7 @@
+name: Theminator
+type: module
+description: A module implementing advanced theme control
+package: Theminator
+dependencies:
+  - field
+core: 8.x

@@ -1,0 +1,7 @@
+theminator.admin_structure.config_form:
+  path: '/admin/structure/theminator'
+  defaults:
+    _form: '\Drupal\theminator\Form\TheminatorConfigForm'
+    _title: 'Theminator config'
+  requirements:
+    _permission: 'access content'

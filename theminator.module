@@ -1,0 +1,68 @@
+<?php
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ */
+function theminator_theme_suggestions_alter(array &$suggestions, array $variables, $hook) {
+  if ($hook == 'field') {
+    $config = _theminator_get_immutable_config();
+
+    $theminator_config = $config->get("theme_config");
+
+    $element = &$variables['element'];
+
+    $id = "entity--node--" . $element['#bundle'] . "__" . $element['#field_name'];
+
+    if (!empty($theminator_config[$id])) {
+      $suggestions = array("theminator_field");
+      if (!in_array($theminator_config[$id], $suggestions)) {
+        $suggestions[] = $theminator_config[$id];
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function theminator_theme($existing, $type, $theme, $path) {
+  $hooks = array(
+    "theminator_field" => array(
+      "template" => "theminator-field",
+      "path" => $path . "/templates",
+    )
+  );
+
+  $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+  if (file_exists(realpath($theme_path) . "/theminator.yml")) {
+    $yaml = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($theme_path . "/theminator.yml"));
+
+    if (!empty($yaml['field']) && is_array($yaml['field'])) {
+      foreach ($yaml['field'] AS $theme_hook => $template) {
+        $hooks["theminator_" . $theme_hook] = array(
+          "template" => $template,
+          "path" => $theme_path . "/templates/theminator",
+          "theme path" => $theme_path
+        );
+      }
+    }
+  }
+
+  return $hooks;
+}
+
+/**
+ * Wrapper for getting module immutable config.
+ *
+ * @return \Drupal\Core\Config\ImmutableConfig
+ */
+function _theminator_get_immutable_config() {
+  return \Drupal::config('theminator.settings');
+}
+
+/**
+ * Wrapper for getting editable config.
+ */
+function _theminator_get_editable_config() {
+  return \Drupal::service('config.factory')->getEditable('theminator.settings');
+}

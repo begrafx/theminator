@@ -1,0 +1,5 @@
+theminator.admin_structure.config_form:
+  title: 'Theminator config'
+  description: ''
+  parent: system.admin_structure
+  route_name: theminator.admin_structure.config_form
