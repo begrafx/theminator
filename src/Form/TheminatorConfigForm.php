@@ -32,7 +32,7 @@ class TheminatorConfigForm extends FormBase {
 
     $registry = theme_get_registry();
 
-    //dpm($config->get("theme_config"));
+    $form_config = $config->get("theme_config");
 
     $field_hooks = array("" => "(" . t("Default") . ")");
     foreach ($registry AS $registry_name => $registry_info) {
@@ -54,13 +54,23 @@ class TheminatorConfigForm extends FormBase {
       $fields = \Drupal::entityManager()->getFieldDefinitions($entity_type, $node_bundle_name);
 
       foreach ($fields AS $field_id => $field_info) {
-        //var_dump($field_info);
-        //exit;
         if (!$field_info->isReadOnly()) {
-          $form[$wrapper_name][$wrapper_name . "__" . $field_info->getName()] = array(
+
+          $field_key = $wrapper_name . "__" . $field_info->getName();
+
+          $form[$wrapper_name][$field_key] = array(
+            "#type" => "details",
             "#title" => $field_info->getLabel(),
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            '#group' => 'vertical_tab_settings',
+          );
+
+          $form[$wrapper_name][$field_key]['theme__' . $field_key] = array(
+            "#title" => t("Theme hook"),
             "#type" => "select",
             "#options" => $field_hooks,
+            "#default_value" => (empty($form_config[$field_key]['theme'])) ? '' : $form_config[$field_key]['theme'],
           );
         }
       }
@@ -85,14 +95,19 @@ class TheminatorConfigForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
 
+    $clean_values = array();
+
     foreach ($values AS $id => $value) {
-      if (substr($id, 0, strlen("entity")) != "entity") {
-        unset($values[$id]);
+      $key = substr($id, 7);
+      if (substr($id, 0, strlen("theme__entity")) == "theme__entity") {
+        if (!empty($value)) {
+          $clean_values[$key]['theme'] = $value;
+        }
       }
     }
 
     $config = _theminator_get_editable_config();
-    $config->set("theme_config", $values);
+    $config->set("theme_config", $clean_values);
     $config->save();
   }
 }

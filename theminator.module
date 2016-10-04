@@ -13,13 +13,29 @@ function theminator_theme_suggestions_alter(array &$suggestions, array $variable
 
     $id = "entity--node--" . $element['#bundle'] . "__" . $element['#field_name'];
 
-    if (!empty($theminator_config[$id])) {
+      //dpm($suggestions);
+      //dpm($variables);
+
+    if (!empty($theminator_config[$id]['theme'])) {
       $suggestions = array("theminator_field");
-      if (!in_array($theminator_config[$id], $suggestions)) {
-        $suggestions[] = $theminator_config[$id];
+      if (!in_array($theminator_config[$id]['theme'], $suggestions)) {
+        $suggestions[] = $theminator_config[$id]['theme'];
       }
     }
   }
+}
+
+/**
+ * Implements hook_preprocess().
+ */
+function theminator_preprocess(&$variables, $hook)
+{
+    if ($hook == 'field') {
+        $element = &$variables['element'];
+        if($element['#field_name'] == 'title') {
+
+        }
+    }
 }
 
 /**
@@ -27,22 +43,26 @@ function theminator_theme_suggestions_alter(array &$suggestions, array $variable
  */
 function theminator_theme($existing, $type, $theme, $path) {
   $hooks = array(
-    "theminator_field" => array(
+    "field__theminator" => array(
+      "variables" => array('field' => null),
       "template" => "theminator-field",
       "path" => $path . "/templates",
     )
   );
 
-  $theme_path = \Drupal::theme()->getActiveTheme()->getPath();
+  $default = \Drupal::service('theme_handler')->getDefault();
+  $theme_path = drupal_get_path("theme", $default);
+
   if (file_exists(realpath($theme_path) . "/theminator.yml")) {
     $yaml = \Symfony\Component\Yaml\Yaml::parse(file_get_contents($theme_path . "/theminator.yml"));
 
     if (!empty($yaml['field']) && is_array($yaml['field'])) {
       foreach ($yaml['field'] AS $theme_hook => $template) {
-        $hooks["theminator_" . $theme_hook] = array(
-          "template" => $template,
-          "path" => $theme_path . "/templates/theminator",
-          "theme path" => $theme_path
+        $hooks[$theme_hook . "__theminator"] = array(
+          //"template" => $template,
+          //"path" => $theme_path . "/templates/theminator",
+          //"theme path" => $theme_path,
+          "render element" => "element"
         );
       }
     }
